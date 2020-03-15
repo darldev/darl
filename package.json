@@ -1,0 +1,35 @@
+{
+  "name": "darl",
+  "version": "1.0.0",
+  "description": "Run npm scripts in parallel",
+  "main": "darl.js",
+  "dependencies": {
+    "chalk": "^3.0.0",
+    "commander": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^13.9.1",
+    "typescript": "^3.8.3"
+  },
+  "scripts": {
+    "darl": "darl"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/meowtype/devparll"
+  },
+  "keywords": [
+    "dev",
+    "parallel"
+  ],
+  "author": "MeowType",
+  "license": "MIT",
+  "bin": {
+    "darl": "./darl.js"
+  },
+  "files": [
+    "darl.js",
+    "dev.js",
+    "tsconfig.json"
+  ]
+}
