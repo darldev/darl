@@ -4,7 +4,7 @@
   "description": "Run npm scripts in parallel",
   "main": "darl.js",
   "dependencies": {
-    "chalk": "^3.0.0",
+    "chalk": "^4.0.0",
     "commander": "^5.0.0"
   },
   "devDependencies": {
