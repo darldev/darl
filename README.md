@@ -34,6 +34,18 @@ module.exports = {
     ]
 }
 ```
+or
+```js
+// darl.config.mjs
+export const run = [
+    'tsc:dev',
+    'webpack:dev'
+]
+export const build = [
+    'tsc',
+    'webpack:build'
+]
+```
 then run
 ```ps1
 darl
