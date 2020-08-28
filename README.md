@@ -1,5 +1,5 @@
 # Darl
-Run npm scripts in parallel
+Process guarding and parallel execution for development  
 
 ## Usage
 ```ps1
@@ -23,46 +23,119 @@ npm i -g darl
 ```
 ```js
 // darl.config.js
+const { npm, run, once } = require('darl')
+
 module.exports = {
-    run: [
-        'tsc:dev',
-        'webpack:dev'
+    group: [
+        npm`tsc:dev`,
+        npm`webpack:dev`,
     ],
-    build: [
-        'tsc',
-        'webpack:build'
-    ]
+    build: once([
+        npm`tsc`,
+        npm`webpack:build`,
+        run`echo`('build'),
+    ])
 }
 ```
 or
 ```js
 // darl.config.mjs
-export const run = [
-    'tsc:dev',
-    'webpack:dev'
+import { npm, run, once } from 'darl'
+
+export const group = [
+    npm`tsc:dev`,
+    npm`webpack:dev`,
 ]
-export const build = [
-    'tsc',
-    'webpack:build'
-]
+export const build = once([
+    npm`tsc`,
+    npm`webpack:build`,
+    run`echo`('build'),
+])
 ```
 then run
 ```ps1
 darl
 ```
 or
-```
+```ps1
 darl build
 ```
 ### Cli
-- Basic usage: `darl [options] [command] [config.js]`
+- Basic usage: `darl [options] [group]`
+  * The default name of the run group is 'group'
 - Options:
+  - `-c, --config <path/to/config.js>`  
+    specify darl.config.js   
+  - `-l, --list`  
+    list groups
   - `-v, --version`  
     output the version number
   - `-h, --help`  
     display help for command
-- Commands:
-  - `run [config.js]`  
-    run npm scripts with process daemon
-  - ` build [config.js]`  
-    run npm scripts once
+
+### Api
+- `darl.config.js`
+  - cjs root is `Obj`  
+  - mjs need named export `Item`  
+  ```ts
+  // string default is run
+  type Run = string | { 
+    // npm  : run npm scripts
+    // run  : run command
+    // node : fork script
+    type: 'npm' | 'run' | 'node'
+    /// npm script name | command | module path
+    run: string
+    args?: any[]
+  };
+  type Item = {
+      // enable process daemon
+      daemon?: boolean
+      /// Processes to run in parallel
+      items: Run[]
+  } | Run[];
+  type Obj = {
+      [key: string]: Item
+  }
+  ```
+- fn `obj`  
+  Provide `Obj` type guard
+  ```ts
+  function obj<T extends Obj>(v: T): T
+  ```
+- fn `item`  
+  Provide `Item` type guard
+  ```ts
+  function item<T extends Item>(v: T): T
+  ```
+- fn `once`  
+  Provide `Item` type guard and set `daemon: false`
+  ```ts
+  function once<T extends Item>(v: T): T extends Run[] ? { daemon: false, items: T } : T & { daemon: false }
+  ```
+- string template `npm`
+  ```ts
+  function npm(strings: TemplateStringsArray, ...keys: any[]): Args<{ type: 'npm'; run: string }>
+  ```
+- string template `run`
+  ```ts
+  function run(strings: TemplateStringsArray, ...keys: any[]): Args<{ type: 'run'; run: string }>
+  ```
+- string template `node`
+  ```ts
+  function node(strings: TemplateStringsArray, ...keys: any[]): Args<{ type: 'node'; run: string }>
+  ```
+- templates return a function to accept args  
+  ```ts
+  type Args<T> = T & (() => T) & ((...args: any[]) => T & { args: any[] })
+  ```
+  so you can
+  ```ts
+  run`some`(123)
+  ```
+  if arg is a function, it will be executed lazily
+  ```ts
+  run`some`(() => 123)
+  ```
+  no matter what type of arg is, it will eventually be converted to a string
+

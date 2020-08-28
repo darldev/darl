@@ -42,6 +42,10 @@
   },
   "files": [
     "darl.js",
-    "dev.js"
+    "run.js",
+    "lib.js",
+    "lib.mjs",
+    "lib.d.ts",
+    "LICENSE"
   ]
 }
