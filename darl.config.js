@@ -6,3 +6,5 @@ module.exports = {
 
     ]
 }
+
+console.log('from cjs')

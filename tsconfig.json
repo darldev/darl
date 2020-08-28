@@ -12,8 +12,9 @@
     },
     "include": [
         "./**/*.js",
+        "./**/*.mjs",
         "./**/*.ts",
-        "./typings"
+        "./typings", "darl.js", "dev.js"
     ],
     "exclude": []
 }
