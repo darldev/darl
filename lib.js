@@ -9,7 +9,10 @@ function item(v) { return v }
 module.exports.item = item
 
 /** @template T * @param {T} v */
-function once(v) { return Object.assign({ daemon: false }, v) }
+function once(v) {
+    if (v instanceof Array) return { daemon: false, items: v }
+    return Object.assign({ daemon: false }, v)
+}
 module.exports.once = once
 
 /** @param {TemplateStringsArray} strings * @param {any[]} keys * @returns {{ type: 'npm'; run: string }}*/

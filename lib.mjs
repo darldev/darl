@@ -7,7 +7,10 @@ export function obj(v) { return v }
 export function item(v) { return v }
 
 /** @template T * @param {T} v */
-export function once(v) { return Object.assign({ daemon: false }, v) }
+export function once(v) {
+    if (v instanceof Array) return { daemon: false, items: v }
+    return Object.assign({ daemon: false }, v)
+}
 
 /** @param {TemplateStringsArray} strings * @param {any[]} keys * @returns {{ type: 'npm'; run: string }}*/
 export function npm(strings, ...keys) {

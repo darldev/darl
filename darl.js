@@ -77,7 +77,6 @@ async function run(/** @type {string | undefined} */group) {
     let c = await try_import(config)
     // @ts-ignore
     if (c != null && c.__proto__ === void 0 && 'default' in c) c = c.default
-    console.log(c)
     if (program.list) {
         if (c == null) return console.log('[]')
         return console.log(`[${Object.keys(c).join(', ')}]`)
