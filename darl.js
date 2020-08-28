@@ -4,9 +4,16 @@ const path = require('path')
 const { program } = require('commander')
 const Package = require('./package.json')
 const chalk = require('chalk')
-const { dev, build } = require('./dev')
+const { torun } = require('./run')
 
-/** @typedef {{ [key: string]: string[] | undefined, run?: string[], build?: string[] }} ConfigObj */
+/** @typedef {string | { type: 'npm' | 'run' | 'node'; run: string; args?: any[]; name?: string }} Run */
+/** @typedef {{
+    daemon?: boolean
+    items: Run[]
+} | Run[]} Item */
+/** @typedef {{
+    [key: string]: Item
+}} Obj */
 
 /** @param {string} config * @return {{ name: string, type: 'none' | 'js' | 'mjs' }[]}*/
 function check_config_path(config) {
@@ -15,12 +22,12 @@ function check_config_path(config) {
         { name: 'darl.config', type: 'js' },
     ]
     const ext = path.extname(config)
-    const name = config.substr(-ext.length)
-    if (ext == 'js') return [
+    const name = config.substring(0, config.length - ext.length)
+    if (ext == '.js') return [
         { name, type: 'js' },
         { name, type: 'mjs' },
     ]
-    if (ext == 'mjs') return [{ name, type: 'mjs' }]
+    if (ext == '.mjs') return [{ name, type: 'mjs' }]
     return [
         { name: config, type: 'none' },
         { name: config, type: 'mjs' },
@@ -28,7 +35,7 @@ function check_config_path(config) {
     ]
 }
 
-/** @param {string} config * @return {Promise<ConfigObj | null>} */
+/** @param {string} config * @return {Promise<Obj | null>} */
 async function try_import(config) {
     const fallback = check_config_path(config)
     /** @type {any[]} */
@@ -37,24 +44,24 @@ async function try_import(config) {
         const cpath = path.resolve(process.cwd(), item.name)
         if (item.type == 'mjs') {
             try {
-                return import(`file:///${cpath}.mjs`)
+                return await import(`file:///${cpath}.mjs`)
             } catch (e) {
                 errs.push(e)
             }
         } else if (item.type == 'js') {
             try {
-                return require(`${cpath}.js`)
+                return await require(`${cpath}.js`)
             } catch (e) {
                 errs.push(e)
             }
         } else {
             try {
-                return import(`file:///${cpath}`)
+                return await import(`file:///${cpath}`)
             } catch (e) {
                 errs.push(e)
             }
             try {
-                return require(cpath)
+                return await require(cpath)
             } catch (e) {
                 errs.push(e)
             }
@@ -65,41 +72,56 @@ async function try_import(config) {
     return null
 }
 
-async function run_dev(/** @type {string} */config) {
-    const c = await try_import(config)
-    if (c == null) return
-    if (c.run == null || c.run.length <= 0) {
-        console.error(chalk.red('no script to run'))
+async function run(/** @type {string | undefined} */group) {
+    const config = program.config
+    let c = await try_import(config)
+    // @ts-ignore
+    if (c != null && c.__proto__ === void 0 && 'default' in c) c = c.default
+    console.log(c)
+    if (program.list) {
+        if (c == null) return console.log('[]')
+        return console.log(`[${Object.keys(c).join(', ')}]`)
+    }
+    if (c == null || Object.keys(c).length == 0) {
+        console.warn(chalk.yellow('config is empty'))
         console.log('use -h to display help for command')
         return
-    } else {
-        return dev(c.run)
     }
-}
-async function run_build(/** @type {string} */config) {
-    const c = await try_import(config)
-    if (c == null) return
-    if (c.build == null || c.build.length <= 0) {
-        console.error(chalk.red('no script to run'))
+    if (group == null) group = 'group'
+    let runs = c[group]
+    if (runs == null) {
+        console.error(chalk.red(`cannot find group '${group}'`))
+        console.log('use -h to display help for command')
+        console.log('use -l to list groups')
         return
-    } else {
-        return build(c.build)
     }
+    let daemon = true
+    if (!(runs instanceof Array)) {
+        daemon = runs.daemon == true
+        runs = runs.items
+    }
+    if (runs == null || runs.length == 0) {
+        console.warn(chalk.yellow('nothing to run'))
+        console.log('use -h to display help for command')
+        return
+    }
+    /** @type {{ type: 'npm' | 'run' | 'node'; run: string; args?: any[] }[]} */
+    const nrun = runs.map(run => {
+        if (typeof run == 'string') return { type: 'run', run }
+        return run
+    })
+    torun(nrun, daemon)
 }
+
+program
+    .option('-c, --config <path/to/config.js>', 'specify darl.config.js')
+    .option('-l, --list', 'list groups')
 
 program
     .name("darl")
-    .arguments('[config.js]')
-    .action(run_dev)
-program
-    .command('run [config.js]')
-    .description('run npm scripts with process daemon')
-    .action(run_dev)
-
-program
-    .command('build [config.js]')
-    .description('run npm scripts once')
-    .action(run_build)
+    .arguments('[group]')
+    .description('* The default name of the run group is \'group\'')
+    .action(run)
 
 program
     .version(Package.version, '-v, --version')

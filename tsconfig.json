@@ -14,7 +14,7 @@
         "./**/*.js",
         "./**/*.mjs",
         "./**/*.ts",
-        "./typings", "darl.js", "dev.js"
+        "./typings", "darl.js", "run.js"
     ],
     "exclude": []
 }

@@ -1,20 +1,32 @@
 {
   "name": "darl",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Run npm scripts in parallel",
-  "main": "darl.js",
+  "main": "lib.js",
+  "type": "commonjs",
+  "types": "lib.d.ts",
+  "typings": "lib.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib.mjs",
+      "require": "./lib.js"
+    },
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "chalk": "^4.0.0",
     "commander": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^14.6.1",
+    "symlink-dir": "^4.1.0",
     "typescript": "^4.0.2"
   },
   "scripts": {
     "link": "npm link --force",
+    "init": "symlink-dir . node_modules/darl",
     "darl": "darl"
-  },
+  },              
   "repository": {
     "type": "git",
     "url": "https://github.com/volight/darl"
