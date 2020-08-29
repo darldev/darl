@@ -1,5 +1,5 @@
 //@ts-check
-const { obj, run, once, item } = require('darl')
+const { obj, run, once, item, npm } = require('darl')
 
 module.exports = obj({
     group: item([
@@ -7,6 +7,9 @@ module.exports = obj({
     ]),
     doonce: once([
         run`powershell`('-command', 'echo', 123)
+    ]),
+    npm: once([
+        npm`darl`
     ])
 })
 

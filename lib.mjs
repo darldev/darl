@@ -19,12 +19,7 @@ export function npm(strings, ...keys) {
         strs.push(`${key}`, strings[i + 1])
     })
     const str = strs.join('')
-    const o = Object.assign(option, {
-        type: 'npm',
-        run: str
-    })
-    // @ts-ignore
-    return o.bind(o)
+    return build_cmd('npm', str)
 }
 
 /** @param {TemplateStringsArray} strings * @param {any[]} keys * @returns {{ type: 'run'; run: string }}*/
@@ -34,12 +29,7 @@ export function run(strings, ...keys) {
         strs.push(`${key}`, strings[i + 1])
     })
     const str = strs.join('')
-    const o = Object.assign(option, {
-        type: 'run',
-        run: str
-    })
-    // @ts-ignore
-    return o.bind(o)
+    return build_cmd('run', str)
 }
 
 /** @param {TemplateStringsArray} strings * @param {any[]} keys * @returns {{ type: 'node'; run: string }}*/
@@ -49,31 +39,21 @@ export function node(strings, ...keys) {
         strs.push(`${key}`, strings[i + 1])
     })
     const str = strs.join('')
-    const o = Object.assign(option, {
-        type: 'node',
-        run: str
-    })
-    // @ts-ignore
-    return o.bind(o)
+    return build_cmd('node', str)
 }
 
-/** @param {TemplateStringsArray} strings * @param {any[]} keys * @returns {{ type: 'exec'; run: string }}*/
-export function exec(strings, ...keys) {
-    const strs = [strings[0]]
-    keys.forEach((key, i) => {
-        strs.push(`${key}`, strings[i + 1])
-    })
-    const str = strs.join('')
-    const o = Object.assign(option, {
-        type: 'exec',
-        run: str
-    })
-    // @ts-ignore
-    return o.bind(o)
+/** @template {string} T * @param {T} type * @param {string} run * @returns {{type: T; run: string}} */
+function build_cmd(type, run) {
+    return bind_cmd({ type, run })
 }
 
-/** @template T @this {T}  @param {any[]} args * @returns {T | (T & { args: string[] })} */
+/** @template T * @param {T} cmd * @returns {T} */
+function bind_cmd(cmd) {
+    return Object.assign(option.bind(cmd), cmd)
+}
+
+/** @template T * @this {T} * @param {any[]} args * @returns {T | (T & { args: string[] })} */
 function option(...args) {
-    if (args.length == 0) return this
-    return Object.assign({ args: [...args] }, this)
+    if (args.length == 0) return bind_cmd(this)
+    return bind_cmd(Object.assign({ ...this }, { args: [...args] }))
 }

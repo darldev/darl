@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "darl": "darl -c darl.config.js doonce",
-    "darl:mjs": "darl doonce"
+    "darl:mjs": "darl doonce",
+    "darl:npm": "darl npm -c darl.config.js",
+    "darl:npm:mjs": "darl npm"
   },
   "author": "",
   "license": "MIT",
