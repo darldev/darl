@@ -87,7 +87,17 @@ darl build
     /// npm script name | command | module path
     run: string
     args?: any[]
-  };
+  } | Queue | Sub;
+  // Sequential task queue
+  type Queue = {
+      type: 'queue',
+      items: Run[]
+  }
+  // Subgroup
+  type Sub = {
+      type: 'sub',
+      items: Run[]
+  }
   type Item = {
       // enable process daemon
       daemon?: boolean
@@ -113,6 +123,18 @@ darl build
   ```ts
   function once<T extends Item>(v: T): T extends Run[] ? { daemon: false, items: T } : T & { daemon: false }
   ```
+- fn `queue`  
+  Provide `Queue` type guard
+  ```ts
+  function queue<T extends Run[]>(v: T): { type: 'queue', items: T }
+  function queue<T extends Run[]>(...items: T): { type: 'queue', items: T }
+  ```
+- fn `sub`  
+  Provide `Sub` type guard
+  ```ts
+  function sub<T extends Run[]>(v: T): { type: 'sub', items: T }
+  function sub<T extends Run[]>(...items: T): { type: 'sub', items: T }
+  ```
 - string template `npm`
   ```ts
   function npm(strings: TemplateStringsArray, ...keys: any[]): Args<{ type: 'npm'; run: string }>
@@ -127,7 +149,7 @@ darl build
   ```
 - templates return a function to accept args  
   ```ts
-  type Args<T> = T & (() => T) & ((...args: any[]) => T & { args: any[] })
+  type Args<T> = T & (() => T) & (<A extends any[]>(...args: A) => T & { args: A })
   ```
   so you can
   ```ts
