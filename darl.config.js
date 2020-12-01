@@ -1,5 +1,5 @@
 //@ts-check
-const { obj, run, once, item } = require('darl')
+const { obj, run, once, item, queue } = require('darl')
 
 module.exports = obj({
     group: item([
@@ -7,6 +7,13 @@ module.exports = obj({
     ]),
     doonce: once([
         run`powershell`('-command', 'echo', 123)
+    ]),
+    doqueue: once([
+        queue(
+            run`powershell`('-command', 'echo', 1),
+            run`powershell`('-command', 'echo', 2),
+            run`powershell`('-command', 'echo', 3),
+        )
     ])
 })
 

@@ -4,16 +4,11 @@ const path = require('path')
 const { program } = require('commander')
 const Package = require('./package.json')
 const chalk = require('chalk')
-const { torun } = require('./run')
+const { toRun, checkRun } = require('./run')
 
-/** @typedef {string | { type: 'npm' | 'run' | 'node'; run: string; args?: any[]; name?: string }} Run */
-/** @typedef {{
-    daemon?: boolean
-    items: Run[]
-} | Run[]} Item */
-/** @typedef {{
-    [key: string]: Item
-}} Obj */
+/** @typedef {import('./lib').Run} Run */
+/** @typedef {import('./lib').RunBody} RunBody */
+/** @typedef {import('./lib').Obj} Obj */
 
 /** @param {string} config * @return {{ name: string, type: 'none' | 'js' | 'mjs' }[]}*/
 function check_config_path(config) {
@@ -104,12 +99,7 @@ async function run(/** @type {string | undefined} */group) {
         console.log('use -h to display help for command')
         return
     }
-    /** @type {{ type: 'npm' | 'run' | 'node'; run: string; args?: any[] }[]} */
-    const nrun = runs.map(run => {
-        if (typeof run == 'string') return { type: 'run', run }
-        return run
-    })
-    torun(nrun, daemon)
+    toRun(checkRun(runs), daemon)
 }
 
 program

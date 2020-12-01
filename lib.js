@@ -1,19 +1,40 @@
 //@ts-check
 
-/** @template T * @param {T} v */
+/** @typedef {import('./lib').Obj} Obj */
+/** @typedef {import('./lib').Item} Item */
+
+/** @template {Obj} T * @param {T} v */
 function obj(v) { return v }
 module.exports.obj = obj
 
-/** @template T * @param {T} v */
+/** @template {Item} T * @param {T} v */
 function item(v) { return v }
 module.exports.item = item
 
-/** @template T * @param {T} v */
+/** @template {Item} T * @param {T} v */
 function once(v) {
     if (v instanceof Array) return { daemon: false, items: v }
     return Object.assign({ daemon: false }, v)
 }
 module.exports.once = once
+
+/** @param {any[]} v */
+function queue(...v) {
+    if (v[0] instanceof Array) {
+        return { type: 'queue', items: v[0] }
+    }
+    return { type: 'queue', items: v }
+}
+module.exports.queue = queue
+
+/** @param {any[]} v */
+function sub(...v) {
+    if (v[0] instanceof Array) {
+        return { type: 'sub', items: v[0] }
+    }
+    return { type: 'sub', items: v }
+}
+module.exports.sub = sub
 
 /** @param {TemplateStringsArray} strings * @param {any[]} keys * @returns {{ type: 'npm'; run: string }}*/
 function npm(strings, ...keys) {

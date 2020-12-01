@@ -1,6 +1,6 @@
 {
   "name": "darl",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Run npm scripts in parallel",
   "main": "lib.js",
   "type": "commonjs",
@@ -26,7 +26,7 @@
     "link": "npm link --force",
     "init": "symlink-dir . node_modules/darl",
     "darl": "darl"
-  },              
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/volight/darl"
