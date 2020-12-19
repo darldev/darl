@@ -39,33 +39,32 @@ function checkRun(runs) {
 }
 exports.checkRun = checkRun
 
+/** @returns {Promise<void>} */
 function toRun(/** @type {RunBody[]} */commands, /** @type {boolean} */daemon) {
     /**@type {Set<(import('child_process').ChildProcess)>}*/
     const childs = new Set
 
     let is_exit = false
 
-    for (const cmd of commands) {
+    const tasks = commands.map(cmd => {
         if (cmd == null) {
             console.error(chalk.red('run item cannot be null'))
-            continue
+            return
         }
         let type = cmd.type
         if (type == null) type = 'run'
 
         if (isSub(cmd)) {
-            toRun(checkRun(cmd.items), daemon)
-            continue
+            return toRun(checkRun(cmd.items), daemon)
         }
         if (isQueue(cmd)) {
-            runQueue(checkRun(cmd.items), daemon)
-            continue
+            return runQueue(checkRun(cmd.items), daemon)
         }
 
         const run = cmd.run
         if (run == null) {
             console.error(chalk.red('run command cannot be null'))
-            continue
+            return
         }
         const args = cmd.args
         let name = cmd.name
@@ -95,35 +94,44 @@ function toRun(/** @type {RunBody[]} */commands, /** @type {boolean} */daemon) {
                 return r
             }
         })()
-        if (summon == null) continue
+        if (summon == null) return
 
         /** @type {(import('child_process').ChildProcess)} */
         let child
         const run_name = type == 'npm' ? `npm run ${run}` : run
 
-        /** @param {string} state */
-        function spawner(state) {
-            child = summon()
+        return new Promise(res => {
+            /** @param {string} state */
+            function spawner(state) {
+                child = summon()
 
-            console.log(chalk.green(`${line}\n[${state}  ${child.pid}] \t${run_name}\n${line}`))
-            childs.add(child)
-            child.on('close', close)
-        }
-        spawner('start: ')
-
-        function close() {
-            console.log(chalk.yellow(`${line}\n[close:    ${child.pid}] \t${run_name}\n${line}`))
-            if (is_exit) return do_exit()
-            childs.delete(child)
-            if (process.platform === 'win32') {
-                spawnSync('taskkill', ["/pid", child.pid.toString(), '/f', '/t'])
-            } else {
-                child.kill('SIGKILL')
+                console.log(chalk.green(`${line}\n[${state}  ${child.pid}] \t${run_name}\n${line}`))
+                childs.add(child)
+                child.on('close', close)
             }
-            if (daemon) spawner('restart:')
-            else return do_exit()
-        }
-    }
+            spawner('start: ')
+
+            function close() {
+                console.log(chalk.yellow(`${line}\n[close:    ${child.pid}] \t${run_name}\n${line}`))
+                if (is_exit) return do_exit()
+                childs.delete(child)
+                if (process.platform === 'win32') {
+                    spawnSync('taskkill', ["/pid", child.pid.toString(), '/f', '/t'])
+                } else {
+                    child.kill('SIGKILL')
+                }
+                if (daemon) spawner('restart:')
+                else return do_exit()
+            }
+
+            function do_exit() {
+                process.off('beforeExit', on_exit)
+                process.off('exit', on_exit)
+                //@ts-ignore
+                res()
+            }
+        })
+    })
 
     function kill_childs() {
         for (const child of childs) {
@@ -136,135 +144,137 @@ function toRun(/** @type {RunBody[]} */commands, /** @type {boolean} */daemon) {
         }
         childs.clear()
     }
-    function do_exit() {
-        process.off('beforeExit', on_exit)
-        process.off('exit', on_exit)
-    }
     function on_exit() {
         is_exit = true
         kill_childs()
     }
     process.on('beforeExit', on_exit)
     process.on('exit', on_exit)
+
+    return Promise.all(tasks).then(() => { })
 }
 exports.toRun = toRun
 
+/** @returns {Promise<void>} */
 function runQueue(/** @type {RunBody[]} */commands, /** @type {boolean} */daemon) {
-    if (commands.length == 0) {
-        console.warn(chalk.yellow('noting to run'))
-        return
-    }
-    /** @type {import('child_process').ChildProcess} */
-    let child
-
-    let is_exit = false
-
-    function next(/** @type {number} */i) {
-        if (is_exit) return
-        i++
-        if (i >= commands.length) {
-            if (!daemon) return
-            i = 0
+    return new Promise(res => {
+        if (commands.length == 0) {
+            console.warn(chalk.yellow('noting to run'))
+            return
         }
-        queueMicrotask(() => runNext(i))
-    }
+        /** @type {import('child_process').ChildProcess} */
+        let child
 
-    runNext(0)
-    function runNext(/** @type {number} */i) {
-        let cmd = commands[i]
-        if (cmd == null) {
-            console.error(chalk.red('run item cannot be null'))
-            return next(i)
-        }
-        let type = cmd.type
-        if (type == null) type = 'run'
+        let is_exit = false
 
-        if (isSub(cmd)) {
-            toRun(checkRun(cmd.items), daemon)
-            return next(i)
-        }
-        if (isQueue(cmd)) {
-            runQueue(checkRun(cmd.items), daemon)
-            return next(i)
-        }
-
-        const run = cmd.run
-        if (run == null) {
-            console.error(chalk.red('run command cannot be null'))
-            return next(i)
-        }
-        const args = cmd.args
-        let name = cmd.name
-        if (name == null) name = run
-
-        /** @type {(() => (import('child_process').ChildProcess))} */
-        const summon = (() => {
-            if (type == 'npm') {
-                return () => spawn(npm, ['run', run, ...checkArgs(args)], {
-                    stdio: 'inherit',
-                    cwd: process.cwd(),
-                })
-            } else if (type == 'run') {
-                return () => spawn(run, checkArgs(args), {
-                    stdio: 'inherit',
-                    cwd: process.cwd(),
-                })
-            } else if (type == 'node') {
-                return () => fork(run, checkArgs(args), {
-                    stdio: 'inherit',
-                    cwd: process.cwd(),
-                })
-            } else {
-                console.error(chalk.red(`unknow type '${type}'`))
-                /** @type {(() => (import('child_process').ChildProcess))} */ // @ts-ignore
-                const r = null
-                return r
+        function next(/** @type {number} */i) {
+            if (is_exit) return res()
+            i++
+            if (i >= commands.length) {
+                if (!daemon) return res()
+                i = 0
             }
-        })()
-        if (summon == null) return next(i)
-
-        const run_name = type == 'npm' ? `npm run ${run}` : run
-
-        /** @param {string} state */
-        function spawner(state) {
-            child = summon()
-
-            console.log(chalk.green(`${line}\n[${state}  ${child.pid}] \t${run_name}\n${line}`))
-            child.on('close', close)
+            queueMicrotask(() => runNext(i))
         }
-        spawner('start: ')
 
-        function close() {
-            console.log(chalk.yellow(`${line}\n[close:    ${child.pid}] \t${run_name}\n${line}`))
-            if (is_exit) return do_exit()
+        runNext(0)
+        async function runNext(/** @type {number} */i) {
+            let cmd = commands[i]
+            if (cmd == null) {
+                console.error(chalk.red('run item cannot be null'))
+                return next(i)
+            }
+            let type = cmd.type
+            if (type == null) type = 'run'
+
+            if (isSub(cmd)) {
+                await toRun(checkRun(cmd.items), daemon)
+                return next(i)
+            }
+            if (isQueue(cmd)) {
+                await runQueue(checkRun(cmd.items), daemon)
+                return next(i)
+            }
+
+            const run = cmd.run
+            if (run == null) {
+                console.error(chalk.red('run command cannot be null'))
+                return next(i)
+            }
+            const args = cmd.args
+            let name = cmd.name
+            if (name == null) name = run
+
+            /** @type {(() => (import('child_process').ChildProcess))} */
+            const summon = (() => {
+                if (type == 'npm') {
+                    return () => spawn(npm, ['run', run, ...checkArgs(args)], {
+                        stdio: 'inherit',
+                        cwd: process.cwd(),
+                    })
+                } else if (type == 'run') {
+                    return () => spawn(run, checkArgs(args), {
+                        stdio: 'inherit',
+                        cwd: process.cwd(),
+                    })
+                } else if (type == 'node') {
+                    return () => fork(run, checkArgs(args), {
+                        stdio: 'inherit',
+                        cwd: process.cwd(),
+                    })
+                } else {
+                    console.error(chalk.red(`unknow type '${type}'`))
+                    /** @type {(() => (import('child_process').ChildProcess))} */ // @ts-ignore
+                    const r = null
+                    return r
+                }
+            })()
+            if (summon == null) return next(i)
+
+            const run_name = type == 'npm' ? `npm run ${run}` : run
+
+            /** @param {string} state */
+            function spawner(state) {
+                child = summon()
+
+                console.log(chalk.green(`${line}\n[${state}  ${child.pid}] \t${run_name}\n${line}`))
+                child.on('close', close)
+            }
+            spawner('start: ')
+
+            function close() {
+                console.log(chalk.yellow(`${line}\n[close:    ${child.pid}] \t${run_name}\n${line}`))
+                if (is_exit) return do_exit()
+                if (process.platform === 'win32') {
+                    spawnSync('taskkill', ["/pid", child.pid.toString(), '/f', '/t'])
+                } else {
+                    child.kill('SIGKILL')
+                }
+                // @ts-ignore
+                child = null
+                return next(i)
+            }
+        }
+
+        function kill_child() {
+            if (child == null) return
+            console.log(chalk.red(`${cros}\n[kill:     ${child.pid}]\n${cros}`))
             if (process.platform === 'win32') {
                 spawnSync('taskkill', ["/pid", child.pid.toString(), '/f', '/t'])
             } else {
                 child.kill('SIGKILL')
             }
-            // @ts-ignore
-            child = null
-            return next(i)
         }
-    }
-
-    function kill_child() {
-        if (child == null) return
-        console.log(chalk.red(`${cros}\n[kill:     ${child.pid}]\n${cros}`))
-        if (process.platform === 'win32') {
-            spawnSync('taskkill', ["/pid", child.pid.toString(), '/f', '/t'])
-        } else {
-            child.kill('SIGKILL')
+        function do_exit() {
+            process.off('beforeExit', on_exit)
+            process.off('exit', on_exit)
+            res()
         }
-    }
-    function do_exit() {
-        process.off('beforeExit', on_exit)
-        process.off('exit', on_exit)
-    }
-    function on_exit() {
-        is_exit = true
-        kill_child()
-    }
-    process.on('beforeExit', on_exit)
-    process.on('exit', on_exit)
+        function on_exit() {
+            is_exit = true
+            kill_child()
+        }
+        process.on('beforeExit', on_exit)
+        process.on('exit', on_exit)
+    })
 }
