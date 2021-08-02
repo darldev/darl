@@ -1,4 +1,7 @@
 # Darl
+[![NPM](https://img.shields.io/npm/v/darl)](https://www.npmjs.com/package/darl)
+![MIT](https://img.shields.io/github/license/volight/darl)
+
 Process guarding and parallel execution for development  
 
 ## Usage
