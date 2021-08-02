@@ -68,6 +68,11 @@ async function try_import(config) {
 }
 
 async function run(/** @type {string | undefined} */group) {
+    const run = program.run
+    if (run) {
+        const watch = program.watch
+        return toRun(checkRun(program.args.map(i => ({ type: 'npm', run: i }))), !!watch)
+    }
     const config = program.config
     let c = await try_import(config)
     // @ts-ignore
@@ -104,12 +109,16 @@ async function run(/** @type {string | undefined} */group) {
 
 program
     .option('-c, --config <path/to/config.js>', 'specify darl.config.js')
+    .option('-r, --run', 'Run task immediately without dark.config.js')
+    .option('-w, --watch', 'Use watch mode when use --run')
     .option('-l, --list', 'list groups')
 
 program
     .name("darl")
     .arguments('[group]')
-    .description('* The default name of the run group is \'group\'')
+    .description(`* The default name of the run group is \'group\'
+
+* If use --run option, will be [task...] instead of [group]`)
     .action(run)
 
 program

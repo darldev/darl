@@ -1,6 +1,6 @@
 {
   "name": "darl",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Run npm scripts in parallel",
   "main": "lib.js",
   "type": "commonjs",
@@ -25,7 +25,8 @@
   "scripts": {
     "link": "npm link --force",
     "init": "symlink-dir . node_modules/darl",
-    "darl": "darl"
+    "darl": "darl",
+    "test:echo": "powershell -command echo 123"
   },
   "repository": {
     "type": "git",

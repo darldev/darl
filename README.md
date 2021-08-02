@@ -63,11 +63,28 @@ darl build
 ### Cli
 - Basic usage: `darl [options] [group]`
   * The default name of the run group is 'group'
+  - Example
+    ```shell
+    darl
+
+    darl build
+
+    darl -c foo.darl.config.js foo
+    ```
+- Immediately run without dark.config.js: `darl -r [task...]`
+  - Example 
+    ```shell
+    darl -r tsc webpack:dev "f*c*i*g long npm script"
+    ```
 - Options:
   - `-c, --config <path/to/config.js>`  
     specify darl.config.js   
   - `-l, --list`  
     list groups
+  - `-r, --run`  
+    Run task immediately without dark.config.js
+  - `-w, --watch`  
+    Use watch mode when use --run
   - `-v, --version`  
     output the version number
   - `-h, --help`  
