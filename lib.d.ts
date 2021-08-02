@@ -1,35 +1,23 @@
-
-export type Run = string | RunBody | Run[]
-export type RunBody = { type: 'npm' | 'run' | 'node'; run: string; args?: any[]; name?: string } | Queue | Sub
-export type Item = {
-    daemon?: boolean
-    items: Run[]
-} | Run[]
-export type Obj = {
-    [key: string]: Item
-}
-
-export type Queue = {
-    type: 'queue',
-    items: Run[]
-}
-export type Sub = {
-    type: 'sub',
-    items: Run[]
-}
-
-export function obj<T extends Obj>(v: T): T
-export function item<T extends Item>(v: T): T
-export function once<T extends Item>(v: T): T extends Run[] ? { daemon: false, items: T } : T & { daemon: false }
-
-export function queue<T extends Run[]>(v: T): { type: 'queue', items: T }
-export function queue<T extends Run[]>(...items: T): { type: 'queue', items: T }
-
-export function sub<T extends Run[]>(v: T): { type: 'sub', items: T }
-export function sub<T extends Run[]>(...items: T): { type: 'sub', items: T }
-
-export function npm(strings: TemplateStringsArray, ...keys: any[]): Args<{ type: 'npm'; run: string }>
-export function run(strings: TemplateStringsArray, ...keys: any[]): Args<{ type: 'run'; run: string }>
-export function node(strings: TemplateStringsArray, ...keys: any[]): Args<{ type: 'node'; run: string }>
-
-export type Args<T> = T & (() => T) & (<A extends any[]>(...args: A) => T & { args: A })
+import { Ident } from "./ident";
+export declare type Task<T extends string> = {
+    ident: Ident;
+    type: T;
+};
+export declare type BasicTask<T extends string> = Task<T> & {
+    run: string;
+};
+export declare type GroupTask<T extends string, I extends BasicTask<any>[]> = Task<T> & {
+    items: I;
+};
+export declare type ArgTask<T extends string> = BasicTask<T> & (() => BasicTask<T>) & (<A extends unknown[]>(...args: A) => BasicTask<T> & {
+    args: A;
+});
+export declare function queue(group: () => void): Task<'queue'>;
+export declare function queue<I extends BasicTask<any>[]>(items: I): GroupTask<'queue', I>;
+export declare function queue<I extends BasicTask<any>[]>(...items: I): GroupTask<'queue', I>;
+export declare function paral(group: () => void): Task<'parallel'>;
+export declare function paral<I extends BasicTask<any>[]>(items: I): GroupTask<'parallel', I>;
+export declare function paral<I extends BasicTask<any>[]>(...items: I): GroupTask<'parallel', I>;
+export declare function npm(strings: TemplateStringsArray, ...keys: unknown[]): ArgTask<'npm'>;
+export declare function run(strings: TemplateStringsArray, ...keys: unknown[]): ArgTask<'run'>;
+export declare function node(strings: TemplateStringsArray, ...keys: unknown[]): ArgTask<'node'>;

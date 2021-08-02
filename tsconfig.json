@@ -1,20 +1,18 @@
 {
     "compilerOptions": {
         "target": "ES2020",
-        "module": "ESNext",
+        "module": "CommonJS",
         "moduleResolution": "node",
         "strict": true,
+        "jsx": "react",
+        "outDir": ".",
+        "declaration": true,
         "esModuleInterop": true,
-        "outDir": "tsout",
-        "sourceMap": true,
         "resolveJsonModule": true,
-        "allowJs": true
     },
     "include": [
-        "./**/*.js",
-        "./**/*.mjs",
-        "./**/*.ts",
-        "./typings", "darl.js", "run.js"
+        "./src/**/*.ts",
+        "./src/**/*.tsx",
     ],
     "exclude": []
 }
