@@ -1,23 +1,25 @@
 import { ident, Ident } from "./ident";
-import { belong, inst, inStack, stack } from "./task";
+import { belong, inst, instack, build_group } from "./task";
 
 export type Task<T extends string> = { ident: Ident, type: T }
 export type BasicTask<T extends string> = Task<T> & { run: string }
 export type GroupTask<T extends string, I extends BasicTask<any>[]> = Task<T> & { items: I }
 export type ArgTask<T extends string> = BasicTask<T> & (() => BasicTask<T>) & (<A extends unknown[]>(...args: A) => BasicTask<T> & { args: A })
 
-function mkgroup(ident: Ident, type: string, items: any[]): any {
-    const task = inStack(stack => {
+type GroupItem = [(() => void)] | [Task<string>[]] | Task<string>[]
+
+function mkgroup<T extends string>(ident: Ident, type: T, items: GroupItem): Task<T> {
+    const task = instack(stack => {
         const first = items[0]
         if (typeof first === 'function') {
             first()
-            return { type }
+            return build_group({ ident, type }, stack)
         } else if (first instanceof Array) {
             for (const i of first) belong(i.ident, stack)
-            return { type, items: first }
+            return build_group({ ident, type, items: first }, stack)
         } else {
-            for (const i of items) belong(i.ident, stack)
-            return { type, items }
+            for (const i of items as Task<string>[]) belong(i.ident, stack)
+            return build_group({ ident, type, items }, stack)
         }
     })
     return inst(ident, task)
@@ -26,15 +28,15 @@ function mkgroup(ident: Ident, type: string, items: any[]): any {
 export function queue(group: () => void): Task<'queue'>
 export function queue<I extends BasicTask<any>[]>(items: I): GroupTask<'queue', I>
 export function queue<I extends BasicTask<any>[]>(...items: I): GroupTask<'queue', I>
-export function queue(...items: any[]): any {
+export function queue(...items: GroupItem): Task<'queue'> {
     return mkgroup(ident(), 'queue', items)
 }
 
-export function paral(group: () => void): Task<'parallel'>
-export function paral<I extends BasicTask<any>[]>(items: I): GroupTask<'parallel', I>
-export function paral<I extends BasicTask<any>[]>(...items: I): GroupTask<'parallel', I>
-export function paral(...items: any[]): any {
-    return mkgroup(ident(), 'parallel', items)
+export function group(group: () => void): Task<'group'>
+export function group<I extends BasicTask<any>[]>(items: I): GroupTask<'group', I>
+export function group<I extends BasicTask<any>[]>(...items: I): GroupTask<'group', I>
+export function group(...items: GroupItem): Task<'group'> {
+    return mkgroup(ident(), 'group', items)
 }
 
 function tempstr(strings: TemplateStringsArray, keys: unknown[]) {

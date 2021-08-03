@@ -15,9 +15,9 @@ export declare type ArgTask<T extends string> = BasicTask<T> & (() => BasicTask<
 export declare function queue(group: () => void): Task<'queue'>;
 export declare function queue<I extends BasicTask<any>[]>(items: I): GroupTask<'queue', I>;
 export declare function queue<I extends BasicTask<any>[]>(...items: I): GroupTask<'queue', I>;
-export declare function paral(group: () => void): Task<'parallel'>;
-export declare function paral<I extends BasicTask<any>[]>(items: I): GroupTask<'parallel', I>;
-export declare function paral<I extends BasicTask<any>[]>(...items: I): GroupTask<'parallel', I>;
+export declare function group(group: () => void): Task<'group'>;
+export declare function group<I extends BasicTask<any>[]>(items: I): GroupTask<'group', I>;
+export declare function group<I extends BasicTask<any>[]>(...items: I): GroupTask<'group', I>;
 export declare function npm(strings: TemplateStringsArray, ...keys: unknown[]): ArgTask<'npm'>;
 export declare function run(strings: TemplateStringsArray, ...keys: unknown[]): ArgTask<'run'>;
 export declare function node(strings: TemplateStringsArray, ...keys: unknown[]): ArgTask<'node'>;

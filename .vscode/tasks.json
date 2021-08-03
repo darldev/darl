@@ -5,9 +5,20 @@
 			"type": "npm",
 			"script": "tsc:w",
 			"group": "build",
-			"problemMatcher": ["$tsc-watch"],
+			"problemMatcher": [
+				"$tsc-watch"
+			],
 			"label": "npm: tsc:w",
-			"detail": "tsc -w"
+			"detail": "tsc -w",
+			"isBackground": true,
 		},
+		{
+			"type": "npm",
+			"script": "babel:w",
+			"problemMatcher": [],
+			"label": "npm: babel:w",
+			"detail": "babel -w --config-file ./babel.config.esm.mjs es -d . --out-file-extension .mjs",
+			"isBackground": true,
+		}
 	]
 }

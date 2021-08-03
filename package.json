@@ -7,27 +7,30 @@
   "types": "lib.d.ts",
   "typings": "lib.d.ts",
   "exports": {
-    ".": {
-      "import": "./lib.mjs",
-      "require": "./lib.js"
-    },
+    ".": "./lib.mjs",
     "./package.json": "./package.json"
   },
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^8.1.0",
     "ink": "^3.0.9",
+    "libsugar": "^2.7.0-beta.1",
     "react": "^16.14.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.14.8",
+    "@babel/core": "^7.14.8",
     "@types/node": "^16.4.10",
     "@types/react": "^17.0.15",
+    "babel-plugin-add-import-extension": "^1.6.0",
     "symlink-dir": "^5.0.1",
     "typescript": "^4.3.5"
   },
   "scripts": {
     "tsc:w": "tsc -w",
     "tsc": "tsc",
+    "babel": "babel --config-file ./babel.config.esm.mjs es -d . --out-file-extension .mjs",
+    "babel:w": "babel -w --config-file ./babel.config.esm.mjs es -d . --out-file-extension .mjs",
     "link": "npm link --force",
     "init": "symlink-dir . node_modules/darl",
     "darl": "darl",
@@ -44,14 +47,20 @@
   "author": "Volight",
   "license": "MIT",
   "bin": {
-    "darl": "./darl.js"
+    "darl": "./darl.mjs"
   },
   "files": [
     "darl.js",
-    "run.js",
-    "lib.js",
+    "darl.mjs",
+    "darl.d.ts",
+    "run.mjs",
+    "run.d.ts",
     "lib.mjs",
     "lib.d.ts",
+    "ident.mjs",
+    "ident.d.ts",
+    "task.mjs",
+    "task.d.ts",
     "LICENSE"
   ]
 }
