@@ -86,5 +86,7 @@ async function try_import(config: string): Promise<Result<any, any[]>> {
 }
 
 try_import(opts.config).then(c => {
-    render(<App {...{ opts, command, args, c }} />)
+    const { waitUntilExit } = render(<App {...{ opts, command, args, c }} />)
+
+    return waitUntilExit()
 })

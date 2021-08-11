@@ -1,4 +1,4 @@
-import { npm } from 'darl'
+import { npm, group } from 'darl'
 
 export function dev() {
     npm`test:echo`

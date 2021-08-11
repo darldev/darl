@@ -92,11 +92,14 @@ async function try_import(config) {
 }
 
 try_import(opts.config).then(c => {
-  render(React.createElement(App, { ...{
+  const {
+    waitUntilExit
+  } = render(React.createElement(App, { ...{
       opts,
       command,
       args,
       c
     }
   }));
+  return waitUntilExit();
 });
