@@ -4,11 +4,15 @@
 /** @typedef {import('./lib').Item} Item */
 
 /** @template {Obj} T * @param {T} v */
-function obj(v) { return v }
+function obj(v) {
+    return v
+}
 module.exports.obj = obj
 
 /** @template {Item} T * @param {T} v */
-function item(v) { return v }
+function item(v) {
+    return v
+}
 module.exports.item = item
 
 /** @template {Item} T * @param {T} v */
@@ -82,5 +86,17 @@ function bind_cmd(cmd) {
 /** @template T * @this {T} * @param {any[]} args * @returns {T | (T & { args: string[] })} */
 function option(...args) {
     if (args.length == 0) return bind_cmd(this)
+    // @ts-ignore
     return bind_cmd(Object.assign({ ...this }, { args: [...args] }))
 }
+
+/** @param {any} env * @returns {(...args: any[]) => any} */
+function env(env) {
+    return (...v) => {
+        if (v[0] instanceof Array) {
+            return { type: 'env', env, items: v[0] }
+        }
+        return { type: 'env', env, items: v }
+    }
+}
+module.exports.env = env

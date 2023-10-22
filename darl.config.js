@@ -1,5 +1,5 @@
 //@ts-check
-const { obj, run, once, item, queue, sub } = require('darl')
+const { obj, run, once, item, queue, sub, env } = require('darl')
 
 module.exports = obj({
     group: item([
@@ -18,7 +18,10 @@ module.exports = obj({
             ),
             run`powershell`('-command', 'echo', 3),
         )
-    ])
+    ]),
+    doenv: once(env({ a: '123' })([
+        run`powershell`('-command', 'echo', '$env:a')
+    ]))
 })
 
 console.log('from cjs')

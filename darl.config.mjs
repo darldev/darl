@@ -1,5 +1,5 @@
 //@ts-check
-import { run, once, item, queue, sub } from 'darl'
+import { run, once, item, queue, sub, env } from 'darl'
 
 export const group = item([
     run`powershell`('-command', 'echo', 123)
@@ -17,6 +17,11 @@ export const doqueue = once([
         ),
         run`powershell`('-command', 'echo', 5),
     )
+])
+export const doenv = once([
+    env({ a: '123' })([
+        run`powershell`('-command', 'echo', '$env:a')
+    ])
 ])
 
 console.log('from mjs')

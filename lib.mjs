@@ -4,10 +4,14 @@
 /** @typedef {import('./lib').Item} Item */
 
 /** @template {Obj} T * @param {T} v */
-export function obj(v) { return v }
+export function obj(v) {
+    return v
+}
 
 /** @template {Item} T * @param {T} v */
-export function item(v) { return v }
+export function item(v) {
+    return v
+}
 
 /** @template {Item} T * @param {T} v */
 export function once(v) {
@@ -74,5 +78,16 @@ function bind_cmd(cmd) {
 /** @template T * @this {T} * @param {any[]} args * @returns {T | (T & { args: string[] })} */
 function option(...args) {
     if (args.length == 0) return bind_cmd(this)
+    // @ts-ignore
     return bind_cmd(Object.assign({ ...this }, { args: [...args] }))
+}
+
+/** @param {any} env * @returns {(...args: any[]) => any} */
+export function env(env) {
+    return (...v) => {
+        if (v[0] instanceof Array) {
+            return { type: 'env', env, items: v[0] }
+        }
+        return { type: 'env', env, items: v }
+    }
 }

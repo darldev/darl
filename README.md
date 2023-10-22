@@ -113,6 +113,12 @@ darl build
       type: 'queue',
       items: Run[]
   }
+  // Env group
+  export type Env = {
+    type: 'env'
+    env: Record<string, string>
+    items: Run[]
+  }
   // Subgroup
   type Sub = {
       type: 'sub',
@@ -154,6 +160,15 @@ darl build
   ```ts
   function sub<T extends Run[]>(v: T): { type: 'sub', items: T }
   function sub<T extends Run[]>(...items: T): { type: 'sub', items: T }
+  ```
+- fn `env`  
+  Provide `Env` type guard
+  ```ts
+  export function env<E extends EnvRecord>(
+    env: E
+  )
+  : (<T extends Run[]>(v: T) => { type: 'env'; env: E; items: T }) 
+  & (<T extends Run[]>(...items: T) => { type: 'env'; env: E; items: T })
   ```
 - string template `npm`
   ```ts

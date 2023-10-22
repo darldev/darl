@@ -1,6 +1,6 @@
 {
   "name": "darl",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Run npm scripts in parallel",
   "main": "lib.js",
   "type": "commonjs",

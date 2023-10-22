@@ -12,16 +12,18 @@ const { toRun, checkRun } = require('./run')
 
 /** @param {string} config * @return {{ name: string, type: 'none' | 'js' | 'mjs' }[]}*/
 function check_config_path(config) {
-    if (config == null) return [
-        { name: 'darl.config', type: 'mjs' },
-        { name: 'darl.config', type: 'js' },
-    ]
+    if (config == null)
+        return [
+            { name: 'darl.config', type: 'mjs' },
+            { name: 'darl.config', type: 'js' },
+        ]
     const ext = path.extname(config)
     const name = config.substring(0, config.length - ext.length)
-    if (ext == '.js') return [
-        { name, type: 'js' },
-        { name, type: 'mjs' },
-    ]
+    if (ext == '.js')
+        return [
+            { name, type: 'js' },
+            { name, type: 'mjs' },
+        ]
     if (ext == '.mjs') return [{ name, type: 'mjs' }]
     return [
         { name: config, type: 'none' },
@@ -67,7 +69,7 @@ async function try_import(config) {
     return null
 }
 
-async function run(/** @type {string | undefined} */group) {
+async function run(/** @type {string | undefined} */ group) {
     const run = program.run
     if (run) {
         const watch = program.watch
@@ -114,13 +116,13 @@ program
     .option('-l, --list', 'list groups')
 
 program
-    .name("darl")
+    .name('darl')
     .arguments('[group]')
-    .description(`* The default name of the run group is \'group\'
+    .description(
+        `* The default name of the run group is \'group\'
 
-* If use --run option, will be [task...] instead of [group]`)
+* If use --run option, will be [task...] instead of [group]`
+    )
     .action(run)
 
-program
-    .version(Package.version, '-v, --version')
-    .parse()
+program.version(Package.version, '-v, --version').parse()
